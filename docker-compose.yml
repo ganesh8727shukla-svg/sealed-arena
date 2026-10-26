@@ -1,0 +1,91 @@
+
+services:
+  broker:
+    build: ./broker
+    container_name: sealed-broker
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  red:
+    build: ./red
+    container_name: sealed-red
+    depends_on:
+      broker:
+        condition: service_healthy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  blue:
+    build: ./blue
+    container_name: sealed-blue
+    depends_on:
+      broker:
+        condition: service_healthy
+      llm:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  llm:
+    build: ./llm
+    container_name: sealed-llm
+    ports:
+      - "127.0.0.1:8001:8001"
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  dashboard:
+    build: ./dashboard
+    container_name: sealed-dashboard
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      broker:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/', timeout=2).read(64)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s

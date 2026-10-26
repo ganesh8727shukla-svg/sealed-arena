@@ -1,0 +1,28 @@
+services:
+
+  red:
+    build: ./red
+    container_name: sealed-red
+    depends_on:
+      - broker
+
+  blue:
+    build: ./blue
+    container_name: sealed-blue
+    command: ["python", "-c", "print('BLUE TEAM READY')"]
+
+  broker:
+    build: ./broker
+    container_name: sealed-broker
+    ports:
+      - "8000:8000"
+
+  llm:
+    build: ./llm
+    container_name: sealed-llm
+    command: ["python", "-c", "print('FAKE LLM READY')"]
+
+  dashboard:
+    build: ./dashboard
+    container_name: sealed-dashboard
+    command: ["python", "-c", "print('DASHBOARD READY')"]

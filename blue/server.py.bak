@@ -1,0 +1,35 @@
+
+import json
+import time
+import urllib.request
+import urllib.error
+
+BROKER = "http://broker:8000"
+last_id = 0
+
+print("[BLUE] Team online; monitoring broker events", flush=True)
+
+while True:
+    try:
+        with urllib.request.urlopen(
+            BROKER + "/events", timeout=3
+        ) as response:
+            events = json.loads(response.read())["events"]
+
+        for event in events:
+            if event["id"] <= last_id:
+                continue
+
+            last_id = event["id"]
+            payload = event["payload"]
+
+            if payload.get("source") == "red":
+                print(
+                    f"[BLUE] Observed red-team event: {payload}",
+                    flush=True
+                )
+
+    except (OSError, ValueError, KeyError) as error:
+        print(f"[BLUE] Broker unavailable: {error}", flush=True)
+
+    time.sleep(3)

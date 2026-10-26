@@ -1,0 +1,85 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: sealed-postgres
+    environment:
+      POSTGRES_DB: sealed_arena
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Copy .env.example to .env and set POSTGRES_PASSWORD}"
+      BROKER_DB_PASSWORD: "${BROKER_DB_PASSWORD:?Set a separate BROKER_DB_PASSWORD in .env}"
+    volumes:
+      - sealedarena-postgres-data:/var/lib/postgresql/data
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/001-create-app-role.sh:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  broker:
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: sealed_arena
+      DB_USER: sealed_arena
+      DB_PASSWORD: "${BROKER_DB_PASSWORD:?Set a separate BROKER_DB_PASSWORD in .env}"
+      SCHEMA_FILE: /app/schema.sql
+      LEGACY_EVENTS_FILE: /app/legacy_events.json
+    volumes:
+      - ./schema.sql:/app/schema.sql:ro
+      - ./legacy_events.json:/app/legacy_events.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  red:
+    depends_on:
+      broker:
+        condition: service_healthy
+
+  blue:
+    depends_on:
+      broker:
+        condition: service_healthy
+      llm:
+        condition: service_healthy
+
+  llm:
+    environment:
+      LLM_PROVIDER: "${LLM_PROVIDER:-mock}"
+      OPENAI_BASE_URL: "${OPENAI_BASE_URL:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-}"
+
+  dashboard-addon:
+    build:
+      context: ./dashboard_addon
+    container_name: sealed-dashboard-addon
+    ports:
+      - "127.0.0.1:8082:8082"
+    depends_on:
+      broker:
+        condition: service_healthy
+      blue:
+        condition: service_healthy
+      llm:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  sealedarena-postgres-data:
