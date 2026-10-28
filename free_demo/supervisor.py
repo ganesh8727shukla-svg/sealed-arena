@@ -93,6 +93,7 @@ def boot_services():
         ("bayora-witness", "bayora/witness", "server.py", {
             "PORT": 8104, "WITNESS_DB_PATH": "/data/witness.sqlite3",
             "BAYORA_WITNESS_TOKEN": witness_token,
+            "PYTHONPATH": str(ROOT / "bayora"),
         }),
     ]
     for name, directory, script, overrides in bayora_workers:
@@ -106,6 +107,7 @@ def boot_services():
         "BAYORA_WITNESS_URL": "http://127.0.0.1:8104",
         "BAYORA_BLUE_INTERNAL_TOKEN": blue_token,
         "BAYORA_WITNESS_TOKEN": witness_token,
+        "PYTHONPATH": str(ROOT / "bayora"),
         "SEALED_ARENA_PUBLIC_URL": "/soc",
     })
 
