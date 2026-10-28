@@ -61,17 +61,21 @@ This demonstrates network reachability boundaries, API role checks, pre-release 
 
 The audit ledger uses a SHA-256 hash chain and append-only database triggers. A separate witness service stores the last accepted sequence and root, so rewriting the controller's ordinary audit database without also changing the witness is detectable. Both services still run on this same Docker host; this is not an external trust anchor against a host administrator.
 
-## Render hosted demo
+## Render deployment
 
-`render.yaml` defines the complete hosted demo: 11 Docker services, Render Postgres, and persistent disks for the Bayora controller and witness. It is designed for a Render Hobby workspace, but the resources themselves are paid. Render's current smallest paid service plan is $7/month per service, Render Postgres starts at $6/month, and disks cost $0.25/GB/month. With all 11 services running, one database, and the two 1 GB disks, budget about **$83.50/month**, before model API usage or any bandwidth beyond the included amount. Check Render's [current pricing](https://render.com/pricing) before creating the Blueprint.
+### Free preview
 
-The free Render resources cannot host this full topology: free web services cannot receive private-network traffic, free services do not support persistent disks, and free Postgres expires after 30 days. The local Docker setup remains the zero-cost option. See Render's [free-instance limitations](https://render.com/docs/free).
+The root `render.yaml` is a zero-cost preview blueprint with one free web service and one free Render Postgres database. One container runs the synthetic SOC and Bayora services together; open Bayora at `/` and the SOC dashboard at `/soc`. The target model stays in mock mode, so this setup needs no OpenAI key and makes no model API calls.
 
-To start the hosted demo, connect this repository to Render as a Blueprint and choose the branch containing `render.yaml`. Render will prompt for the `sync: false` values. Set a strong SOC dashboard username and password, paste the OpenAI API key only into `BAYORA_UPSTREAM_API_KEY`, and use new random values for the three role tokens. Enter the **same** fresh random value for both `BAYORA_BLUE_INTERNAL_TOKEN` prompts and another same value for both `BAYORA_WITNESS_TOKEN` prompts. These internal values are duplicated because the controller and worker services need to agree; they are not committed to this repository. Do not upload or commit `.env`.
+Connect the GitHub repository to Render as a Blueprint and use `render.yaml`. Enter a strong SOC dashboard username and password when prompted. Render generates the three Bayora role tokens; after deploy, retrieve `BAYORA_RED_TOKEN`, `BAYORA_BLUE_TOKEN`, and `BAYORA_EVALUATOR_TOKEN` from the service's Environment page and paste the matching token into the Bayora role connection. Do not upload or commit `.env`.
 
-After the first deploy, retrieve `BAYORA_RED_TOKEN`, `BAYORA_BLUE_TOKEN`, and `BAYORA_EVALUATOR_TOKEN` from the Bayora service's Environment page and paste the matching token into the Bayora UI's role connection. The SOC dashboard is protected by the Basic Auth credentials you supplied. If Render assigns a public hostname with a suffix, update `BAYORA_PUBLIC_URL` on the SOC service and `SEALED_ARENA_PUBLIC_URL` on Bayora to the actual service URLs.
+This is a temporary demo setup. A free web service spins down after 15 minutes without traffic and its local files can be lost when it restarts. The Bayora controller and witness keep their SQLite state on that temporary filesystem, so Bayora run history and witness checkpoints can reset. Free Render Postgres expires after 30 days. The single-container version also does not provide separate worker network isolation. See Render's [free-instance limitations](https://render.com/docs/free) and [private-network behavior](https://render.com/docs/private-network).
 
-Render puts services in the same workspace and region on a shared private network. The hosted version therefore demonstrates application-level roles and checks, but it **does not demonstrate the separate Docker network isolation** provided by the local Compose setup. Treat it as a synthetic-data prototype, not as production security infrastructure. See Render's [private-network behavior](https://render.com/docs/private-network).
+### Full paid topology
+
+`render-paid.yaml` defines the full 11-service setup, Render Postgres, and persistent disks for the Bayora controller and witness. It is not free: using Render's current smallest paid service plan at $7/month per service, Postgres starting at $6/month, and two 1 GB disks at $0.25/GB/month, the continuous estimate is about **$83.50/month**, before model API usage or any bandwidth beyond the included amount. Check [current Render pricing](https://render.com/pricing) before creating these resources.
+
+The full topology keeps separate application services, but Render services in the same workspace and region share a private network. It demonstrates application-level roles and checks, but it **does not demonstrate the separate Docker network isolation** provided by the local Compose setup. Treat either hosted option as a synthetic-data prototype, not as production security infrastructure.
 
 ### Bayora API and checks
 

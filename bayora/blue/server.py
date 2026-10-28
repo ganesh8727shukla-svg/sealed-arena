@@ -81,7 +81,8 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 
-server = ThreadingHTTPServer(("0.0.0.0", 8100), Handler)
+PORT = int(os.environ.get("PORT", "8100"))
+server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
 server.daemon_threads = True
-print(json.dumps({"service": "bayora-blue", "stage": "ready"}), flush=True)
+print(json.dumps({"service": "bayora-blue", "stage": "ready", "port": PORT}), flush=True)
 server.serve_forever()

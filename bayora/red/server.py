@@ -2,6 +2,7 @@
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from urllib.parse import urlsplit, parse_qs
 
 from catalog import get_test_cases
@@ -37,7 +38,8 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 
-server = ThreadingHTTPServer(("0.0.0.0", 8100), Handler)
+PORT = int(os.environ.get("PORT", "8100"))
+server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
 server.daemon_threads = True
-print(json.dumps({"service": "bayora-red", "stage": "ready"}), flush=True)
+print(json.dumps({"service": "bayora-red", "stage": "ready", "port": PORT}), flush=True)
 server.serve_forever()

@@ -114,8 +114,10 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 
-server = ThreadingHTTPServer(("0.0.0.0", 8100), Handler)
+PORT = int(os.environ.get("PORT", "8100"))
+server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
 server.daemon_threads = True
 print(json.dumps({"service": "bayora-model", "stage": "ready",
-                  "mode": "stateless-mock" if MODEL_PROVIDER == "mock" else MODEL_PROVIDER}), flush=True)
+                  "mode": "stateless-mock" if MODEL_PROVIDER == "mock" else MODEL_PROVIDER,
+                  "port": PORT}), flush=True)
 server.serve_forever()

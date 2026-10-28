@@ -1,248 +1,54 @@
+# Zero-cost preview: one free web service runs the synthetic services locally
+# inside the same container and connects to the single free Render Postgres.
+# See README for data-retention and isolation limits.
 services:
-  - type: pserv
-    name: sealedarena-broker
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./broker/Dockerfile
-    dockerContext: .
-    envVars:
-      - key: DB_HOST
-        fromDatabase:
-          name: sealedarena-postgres
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: sealedarena-postgres
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: sealedarena-postgres
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: sealedarena-postgres
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: sealedarena-postgres
-          property: password
-      - key: SCHEMA_FILE
-        value: /app/schema.sql
-      - key: LEGACY_EVENTS_FILE
-        value: /app/legacy_events.json
-
-  - type: pserv
-    name: sealedarena-red
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./red/Dockerfile
-    dockerContext: ./red
-    envVars:
-      - key: BROKER_URL
-        fromService:
-          name: sealedarena-broker
-          type: pserv
-          property: hostport
-
-  - type: pserv
-    name: sealedarena-blue
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./blue/Dockerfile
-    dockerContext: ./blue
-    envVars:
-      - key: BROKER_URL
-        fromService:
-          name: sealedarena-broker
-          type: pserv
-          property: hostport
-      - key: LLM_URL
-        fromService:
-          name: sealedarena-llm
-          type: pserv
-          property: hostport
-
-  - type: pserv
-    name: sealedarena-llm
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./llm/Dockerfile
-    dockerContext: ./llm
-    envVars:
-      - key: LLM_PROVIDER
-        value: mock
-
-  - type: pserv
-    name: sealedarena-dashboard
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./dashboard/Dockerfile
-    dockerContext: ./dashboard
-    envVars:
-      - key: BROKER_URL
-        fromService:
-          name: sealedarena-broker
-          type: pserv
-          property: hostport
-
   - type: web
-    name: sealedarena-soc
+    name: sealedarena-free-demo
     runtime: docker
-    plan: 0.5c-512mb
+    plan: free
     region: singapore
-    dockerfilePath: ./dashboard_addon/Dockerfile
-    dockerContext: ./dashboard_addon
+    dockerfilePath: ./free_demo/Dockerfile
+    dockerContext: .
     healthCheckPath: /ready
     envVars:
       - key: PORT
         value: "10000"
-      - key: BROKER_URL
-        fromService:
-          name: sealedarena-broker
-          type: pserv
-          property: hostport
-      - key: RED_URL
-        fromService:
-          name: sealedarena-red
-          type: pserv
-          property: hostport
-      - key: BLUE_URL
-        fromService:
-          name: sealedarena-blue
-          type: pserv
-          property: hostport
-      - key: LLM_URL
-        fromService:
-          name: sealedarena-llm
-          type: pserv
-          property: hostport
-      - key: DASHBOARD_URL
-        fromService:
-          name: sealedarena-dashboard
-          type: pserv
-          property: hostport
-      - key: BAYORA_PUBLIC_URL
-        value: https://sealedarena-bayora.onrender.com
+      - key: DB_HOST
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: password
       - key: DASHBOARD_BASIC_AUTH_USER
         sync: false
       - key: DASHBOARD_BASIC_AUTH_PASSWORD
         sync: false
-
-  - type: pserv
-    name: sealedarena-bayora-red
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./bayora/red/Dockerfile
-    dockerContext: ./bayora/red
-
-  - type: pserv
-    name: sealedarena-bayora-model
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./bayora/model/Dockerfile
-    dockerContext: ./bayora/model
-    envVars:
-      - key: BAYORA_MODEL_PROVIDER
-        value: openai_compatible
-      - key: BAYORA_UPSTREAM_BASE_URL
-        value: https://api.openai.com/v1
-      - key: BAYORA_UPSTREAM_MODEL
-        value: gpt-6-luna
-      - key: BAYORA_UPSTREAM_API_KEY
-        sync: false
-
-  - type: pserv
-    name: sealedarena-bayora-blue
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./bayora/blue/Dockerfile
-    dockerContext: ./bayora/blue
-    envVars:
-      - key: BAYORA_BLUE_INTERNAL_TOKEN
-        sync: false
-
-  - type: pserv
-    name: sealedarena-bayora-witness
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./bayora/witness/Dockerfile
-    dockerContext: ./bayora
-    disk:
-      name: witness-state
-      mountPath: /data
-      sizeGB: 1
-    envVars:
-      - key: WITNESS_DB_PATH
-        value: /data/witness.sqlite3
-      - key: BAYORA_WITNESS_TOKEN
-        sync: false
-      - key: BAYORA_ALLOWED_ORIGINS
-        value: https://sealedarena-bayora.onrender.com
-
-  - type: web
-    name: sealedarena-bayora
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./bayora/controller/Dockerfile
-    dockerContext: ./bayora
-    healthCheckPath: /ready
-    disk:
-      name: controller-state
-      mountPath: /data
-      sizeGB: 1
-    envVars:
-      - key: PORT
-        value: "10000"
-      - key: BAYORA_DB_PATH
-        value: /data/bayora.sqlite3
-      - key: BAYORA_RED_URL
-        fromService:
-          name: sealedarena-bayora-red
-          type: pserv
-          property: hostport
-      - key: BAYORA_MODEL_URL
-        fromService:
-          name: sealedarena-bayora-model
-          type: pserv
-          property: hostport
-      - key: BAYORA_BLUE_URL
-        fromService:
-          name: sealedarena-bayora-blue
-          type: pserv
-          property: hostport
-      - key: BAYORA_WITNESS_URL
-        fromService:
-          name: sealedarena-bayora-witness
-          type: pserv
-          property: hostport
-      - key: BAYORA_BLUE_INTERNAL_TOKEN
-        sync: false
-      - key: BAYORA_WITNESS_TOKEN
-        sync: false
       - key: BAYORA_RED_TOKEN
-        sync: false
+        generateValue: true
       - key: BAYORA_BLUE_TOKEN
-        sync: false
+        generateValue: true
       - key: BAYORA_EVALUATOR_TOKEN
-        sync: false
-      - key: SEALED_ARENA_PUBLIC_URL
-        value: https://sealedarena-soc.onrender.com
+        generateValue: true
 
 databases:
-  - name: sealedarena-postgres
-    databaseName: sealed_arena
-    user: sealed_arena
-    plan: 0.1c-256mb
+  - name: sealedarena-free-postgres
+    databaseName: sealed_arena_free
+    user: sealed_arena_free
+    plan: free
     region: singapore
     postgresMajorVersion: "17"
     ipAllowList: []
