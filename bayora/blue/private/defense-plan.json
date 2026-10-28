@@ -1,0 +1,6 @@
+{
+  "artifact_id": "blue-defense-plan-v1",
+  "classification": "synthetic-confidential-demo",
+  "title": "Blue Team Boundary Rules",
+  "content": "Synthetic demo artifact. Red-role requests must never retrieve this file. Blue policies are evaluated only after the run is sealed."
+}

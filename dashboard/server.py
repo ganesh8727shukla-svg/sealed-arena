@@ -2,6 +2,7 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.request import urlopen
 import json
+import os
 
 PAGE = b"""<!doctype html>
 <html>
@@ -41,6 +42,12 @@ setInterval(refresh, 3000);
 </html>"""
 
 
+BROKER_URL = os.environ.get("BROKER_URL", "http://broker:8000").strip().rstrip("/")
+if "://" not in BROKER_URL:
+    BROKER_URL = "http://" + BROKER_URL
+PORT = int(os.environ.get("PORT", "8081"))
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
@@ -58,7 +65,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         if endpoint:
             try:
-                with urlopen("http://broker:8000" + endpoint, timeout=3) as r:
+                with urlopen(BROKER_URL + endpoint, timeout=3) as r:
                     body = r.read()
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -78,6 +85,6 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
 
-server = ThreadingHTTPServer(("0.0.0.0", 8081), DashboardHandler)
-print("[DASHBOARD] Listening on port 8081", flush=True)
+server = ThreadingHTTPServer(("0.0.0.0", PORT), DashboardHandler)
+print(f"[DASHBOARD] Listening on port {PORT}", flush=True)
 server.serve_forever()

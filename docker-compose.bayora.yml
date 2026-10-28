@@ -1,0 +1,165 @@
+services:
+  bayora-controller:
+    build:
+      context: ./bayora
+      dockerfile: controller/Dockerfile
+    container_name: sealed-bayora-controller
+    user: "10001:10001"
+    environment:
+      BAYORA_DB_PATH: /data/bayora.sqlite3
+      BAYORA_RED_URL: http://bayora-red:8100
+      BAYORA_MODEL_URL: http://bayora-model:8100
+      BAYORA_BLUE_URL: http://bayora-blue:8100
+      BAYORA_WITNESS_URL: http://bayora-witness:8100
+      BAYORA_WITNESS_TOKEN: "${BAYORA_WITNESS_TOKEN:-local-witness-ingest-token}"
+      BAYORA_BLUE_INTERNAL_TOKEN: "${BAYORA_BLUE_INTERNAL_TOKEN:-local-blue-service-token}"
+      BAYORA_RED_TOKEN: "${BAYORA_RED_TOKEN:-bayora-red-local-demo}"
+      BAYORA_BLUE_TOKEN: "${BAYORA_BLUE_TOKEN:-bayora-blue-local-demo}"
+      BAYORA_EVALUATOR_TOKEN: "${BAYORA_EVALUATOR_TOKEN:-bayora-evaluator-local-demo}"
+    volumes:
+      - bayora-controller-data:/data
+    ports:
+      - "127.0.0.1:8083:8083"
+    depends_on:
+      bayora-red:
+        condition: service_healthy
+      bayora-model:
+        condition: service_healthy
+      bayora-blue:
+        condition: service_healthy
+      bayora-witness:
+        condition: service_healthy
+    networks:
+      - bayora-ui
+      - bayora-red-segment
+      - bayora-model-segment
+      - bayora-blue-segment
+      - bayora-witness-segment
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 0.50
+    pids_limit: 64
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8083/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 4s
+      retries: 5
+      start_period: 5s
+
+  bayora-red:
+    build: ./bayora/red
+    container_name: sealed-bayora-red
+    networks:
+      - bayora-red-segment
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 48
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  bayora-model:
+    build: ./bayora/model
+    container_name: sealed-bayora-model
+    networks:
+      - bayora-model-segment
+    environment:
+      BAYORA_MODEL_PROVIDER: "${BAYORA_MODEL_PROVIDER:-mock}"
+      BAYORA_UPSTREAM_BASE_URL: "${BAYORA_UPSTREAM_BASE_URL:-}"
+      BAYORA_UPSTREAM_MODEL: "${BAYORA_UPSTREAM_MODEL:-}"
+      BAYORA_UPSTREAM_API_KEY: "${BAYORA_UPSTREAM_API_KEY:-}"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 48
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  bayora-blue:
+    build: ./bayora/blue
+    container_name: sealed-bayora-blue
+    environment:
+      BAYORA_BLUE_INTERNAL_TOKEN: "${BAYORA_BLUE_INTERNAL_TOKEN:-local-blue-service-token}"
+    networks:
+      - bayora-blue-segment
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 48
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  bayora-witness:
+    build:
+      context: ./bayora
+      dockerfile: witness/Dockerfile
+    container_name: sealed-bayora-witness
+    user: "10001:10001"
+    environment:
+      WITNESS_DB_PATH: /data/witness.sqlite3
+      BAYORA_WITNESS_TOKEN: "${BAYORA_WITNESS_TOKEN:-local-witness-ingest-token}"
+    volumes:
+      - bayora-witness-data:/data
+    ports:
+      - "127.0.0.1:8084:8100"
+    networks:
+      - bayora-witness-segment
+      - bayora-ui
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    cpus: 0.15
+    pids_limit: 32
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+networks:
+  bayora-ui: {}
+  bayora-red-segment:
+    internal: true
+  bayora-model-segment:
+    internal: true
+  bayora-blue-segment:
+    internal: true
+  bayora-witness-segment:
+    internal: true
+
+volumes:
+  bayora-controller-data:
+  bayora-witness-data:

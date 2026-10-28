@@ -1,7 +1,9 @@
 
 services:
   broker:
-    build: ./broker
+    build:
+      context: .
+      dockerfile: broker/Dockerfile
     container_name: sealed-broker
     ports:
       - "127.0.0.1:8000:8000"
@@ -24,19 +26,24 @@ services:
     depends_on:
       broker:
         condition: service_healthy
+    restart: unless-stopped
     read_only: true
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   blue:
     build: ./blue
     container_name: sealed-blue
     depends_on:
       broker:
-        condition: service_healthy
-      llm:
         condition: service_healthy
     restart: unless-stopped
     read_only: true

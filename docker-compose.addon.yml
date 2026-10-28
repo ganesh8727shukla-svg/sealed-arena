@@ -64,9 +64,9 @@ services:
         condition: service_healthy
       blue:
         condition: service_healthy
-      llm:
-        condition: service_healthy
       dashboard:
+        condition: service_healthy
+      red:
         condition: service_healthy
     restart: unless-stopped
     read_only: true

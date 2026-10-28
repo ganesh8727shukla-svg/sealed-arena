@@ -1,42 +1,33 @@
-import urllib.request
+"""Command-line helper to start a local SealedArena demo scenario."""
+
+import argparse
 import json
-import time
-import uuid
+import os
+from urllib.request import Request, urlopen
 
-BROKER_URL = "http://broker:8000/message"
 
-time.sleep(2)
+SCENARIOS = ("normal_login", "brute_force_login", "unusual_location", "suspicious_process")
 
-message = {
-    "source": "red",
-    "type": "test",
-    "message": "RED TEAM MESSAGE"
-}
 
-data = json.dumps(message).encode()
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("scenario", choices=SCENARIOS, help="synthetic scenario to generate")
+    parser.add_argument(
+        "--dashboard-url",
+        default=os.environ.get("SEALED_ARENA_DASHBOARD_URL", "http://localhost:8082"),
+        help="local dashboard base URL",
+    )
+    args = parser.parse_args()
+    request = Request(
+        args.dashboard_url.rstrip("/") + "/api/scenarios/run",
+        data=json.dumps({"scenario_id": args.scenario}).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(request, timeout=15) as response:
+        result = json.loads(response.read().decode("utf-8"))
+    print(json.dumps(result, indent=2))
 
-request = urllib.request.Request(
-    BROKER_URL,
-    data=data,
-    headers={
-        "Content-Type": "application/json",
-        "Idempotency-Key": str(uuid.uuid4()),
-    },
-    method="POST"
-)
 
-try:
-    with urllib.request.urlopen(request) as response:
-        result = json.loads(response.read().decode())
-        print(json.dumps({
-            "service": "red",
-            "status": "submitted",
-            "broker_event_id": result.get("event_id"),
-        }), flush=True)
-
-except Exception as error:
-    print(json.dumps({
-        "service": "red",
-        "status": "failed",
-        "error_type": type(error).__name__,
-    }), flush=True)
+if __name__ == "__main__":
+    main()

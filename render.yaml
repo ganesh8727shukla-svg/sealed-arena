@@ -1,0 +1,54 @@
+# Zero-cost preview: one free web service runs the synthetic services locally
+# inside the same container and connects to the single free Render Postgres.
+# See README for data-retention and isolation limits.
+services:
+  - type: web
+    name: sealedarena-free-demo
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./free_demo/Dockerfile
+    dockerContext: .
+    healthCheckPath: /ready
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: DB_HOST
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: sealedarena-free-postgres
+          property: password
+      - key: DASHBOARD_BASIC_AUTH_USER
+        sync: false
+      - key: DASHBOARD_BASIC_AUTH_PASSWORD
+        sync: false
+      - key: BAYORA_RED_TOKEN
+        generateValue: true
+      - key: BAYORA_BLUE_TOKEN
+        generateValue: true
+      - key: BAYORA_EVALUATOR_TOKEN
+        generateValue: true
+
+databases:
+  - name: sealedarena-free-postgres
+    databaseName: sealed_arena_free
+    user: sealed_arena_free
+    plan: free
+    region: singapore
+    postgresMajorVersion: "17"
+    ipAllowList: []

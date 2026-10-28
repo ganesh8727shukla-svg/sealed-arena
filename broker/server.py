@@ -7,14 +7,23 @@ import json
 from database import (
     check_database,
     claim_event,
+    clear_scenario_data,
+    complete_scenario_run,
+    create_scenario_run,
     create_event,
     enabled as database_enabled,
+    event_context,
+    get_case,
     initialize_storage,
+    list_cases,
     list_events,
+    list_scenario_runs,
     record_failure,
     retry_event,
     save_analysis,
     status_counts,
+    system_metrics,
+    update_case,
 )
 
 events = []
@@ -160,7 +169,10 @@ def database_get(handler):
             status = params.get("status", [None])[0]
             severity = params.get("severity", [None])[0]
             query = params.get("q", [None])[0]
-            rows, total = list_events(limit, offset, status, severity, query)
+            scenario_run_id = params.get("scenario_run_id", [None])[0]
+            source = params.get("source", [None])[0]
+            asset = params.get("asset", [None])[0]
+            rows, total = list_events(limit, offset, status, severity, query, scenario_run_id, source, asset)
             handler.send_json(200, {
                 "events": rows,
                 "total": total,
@@ -174,9 +186,68 @@ def database_get(handler):
             handler.send_json(503, {"error": "Event storage is temporarily unavailable"})
         return
 
+    if path == "/event-context":
+        params = parse_qs(urlsplit(handler.path).query)
+        try:
+            event_id = int(params.get("event_id", [""])[0])
+            window_seconds = int(params.get("window_seconds", [600])[0])
+            if event_id < 1:
+                raise ValueError("event_id must be positive")
+            handler.send_json(200, event_context(event_id, window_seconds))
+        except ValueError as error:
+            handler.send_json(400, {"error": str(error)})
+        except KeyError:
+            handler.send_json(404, {"error": "Event not found"})
+        except Exception as error:
+            log_record("event_context", status="failed", error_type=type(error).__name__)
+            handler.send_json(503, {"error": "Event context is temporarily unavailable"})
+        return
+
+    if path == "/scenario-runs":
+        params = parse_qs(urlsplit(handler.path).query)
+        try:
+            handler.send_json(200, {"runs": list_scenario_runs(int(params.get("limit", [10])[0]))})
+        except ValueError as error:
+            handler.send_json(400, {"error": str(error)})
+        return
+
+    if path == "/cases":
+        params = parse_qs(urlsplit(handler.path).query)
+        try:
+            limit = int(params.get("limit", [25])[0])
+            offset = int(params.get("offset", [0])[0])
+            rows, total = list_cases(
+                limit, offset,
+                params.get("status", [None])[0],
+                params.get("severity", [None])[0],
+                params.get("q", [None])[0],
+            )
+            handler.send_json(200, {"cases": rows, "total": total, "limit": limit, "offset": offset})
+        except ValueError as error:
+            handler.send_json(400, {"error": str(error)})
+        except Exception as error:
+            log_record("cases_query", status="failed", error_type=type(error).__name__)
+            handler.send_json(503, {"error": "Case storage is temporarily unavailable"})
+        return
+
+    if path.startswith("/cases/"):
+        try:
+            case_id = int(path.rsplit("/", 1)[1])
+            if case_id < 1:
+                raise ValueError
+            handler.send_json(200, get_case(case_id))
+        except ValueError:
+            handler.send_json(400, {"error": "case ID must be a positive integer"})
+        except KeyError:
+            handler.send_json(404, {"error": "Case not found"})
+        except Exception as error:
+            log_record("case_detail", status="failed", error_type=type(error).__name__)
+            handler.send_json(503, {"error": "Case detail is temporarily unavailable"})
+        return
+
     if path == "/stats":
         try:
-            handler.send_json(200, {"statuses": status_counts()})
+            handler.send_json(200, {"statuses": status_counts(), "metrics": system_metrics()})
         except Exception as error:
             log_record("status_query", status="failed", error_type=type(error).__name__)
             handler.send_json(503, {"error": "Event storage is temporarily unavailable"})
@@ -187,7 +258,10 @@ def database_get(handler):
 
 def database_post(handler):
     path = urlsplit(handler.path).path
-    if path not in ("/message", "/events/claim", "/analysis", "/events/fail", "/events/retry"):
+    if path not in (
+        "/message", "/events/claim", "/analysis", "/events/fail", "/events/retry",
+        "/scenario-runs", "/scenario-runs/complete", "/scenario-runs/reset", "/cases/update",
+    ):
         handler.send_json(404, {"error": "Not found"})
         return
     body = read_database_request(handler)
@@ -214,7 +288,31 @@ def database_post(handler):
                 "broker": "sealed-broker",
                 "event_id": event["id"],
                 "event_status": event["status"],
+                "scenario_run_id": event.get("scenario_run_id"),
             })
+        elif path == "/scenario-runs":
+            row = create_scenario_run(body.get("run_id"), body.get("scenario_key"), body.get("name"))
+            handler.send_json(201, row)
+        elif path == "/scenario-runs/complete":
+            run_id = body.get("run_id")
+            if not isinstance(run_id, str) or not run_id.strip():
+                handler.send_json(400, {"error": "run_id is required"})
+                return
+            row = complete_scenario_run(run_id, body.get("status", "completed"), body.get("event_count", 0))
+            handler.send_json(200, row)
+        elif path == "/scenario-runs/reset":
+            handler.send_json(200, clear_scenario_data())
+        elif path == "/cases/update":
+            case_id = body.get("case_id")
+            if isinstance(case_id, bool) or not isinstance(case_id, int) or case_id < 1:
+                handler.send_json(400, {"error": "case_id must be a positive integer"})
+                return
+            data = {key: value for key, value in body.items() if key not in {"case_id", "actor"}}
+            actor = body.get("actor", "local-analyst")
+            if not isinstance(actor, str) or not actor.strip() or len(actor) > 100:
+                handler.send_json(400, {"error": "actor must be a non-empty string of at most 100 characters"})
+                return
+            handler.send_json(200, update_case(case_id, data, actor.strip()))
         elif path == "/events/claim":
             event = claim_event()
             handler.send_json(200, {"event": event})
