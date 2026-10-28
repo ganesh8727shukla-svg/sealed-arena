@@ -24,6 +24,15 @@ class EventContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_event_payload({"source": "red", "type": "test", "message": 12})
 
+    def test_validates_scenario_metadata_and_timestamp(self):
+        payload = {
+            "source": "red", "type": "security_telemetry", "scenario_run_id": "run-1",
+            "scenario_key": "brute_force_login", "occurred_at": "2026-10-15T10:00:00Z",
+        }
+        self.assertIs(validate_event_payload(payload), payload)
+        with self.assertRaises(ValueError):
+            validate_event_payload({**payload, "occurred_at": "yesterday"})
+
 
 class AnalysisContractTests(unittest.TestCase):
     def valid_result(self):
@@ -47,6 +56,22 @@ class AnalysisContractTests(unittest.TestCase):
             normalize_analysis(value)
         value = self.valid_result()
         value["confidence"] = 1.2
+        with self.assertRaises(ValueError):
+            normalize_analysis(value)
+
+    def test_preserves_normalized_rule_findings_and_rejects_invalid_evidence(self):
+        value = self.valid_result()
+        value["detections"] = [{
+            "rule_id": "auth.repeated_login_failures",
+            "title": "Repeated sign-in failures",
+            "severity": "high",
+            "summary": "Five matching failures.",
+            "window_seconds": 600,
+            "evidence": [{"event_id": 7, "field": "event_type", "value": "authentication.login_failed"}],
+        }]
+        normalized = normalize_analysis(value)
+        self.assertEqual(normalized["detections"][0]["evidence"][0]["event_id"], 7)
+        value["detections"][0]["evidence"][0]["event_id"] = True
         with self.assertRaises(ValueError):
             normalize_analysis(value)
 

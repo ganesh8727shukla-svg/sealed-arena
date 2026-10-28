@@ -2,8 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY server.py .
-COPY database.py contracts.py requirements.txt ./
+COPY broker/server.py broker/database.py broker/contracts.py broker/requirements.txt ./
+COPY schema.sql legacy_events.json ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8000

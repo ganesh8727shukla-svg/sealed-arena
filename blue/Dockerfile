@@ -1,7 +1,8 @@
 
 FROM python:3.12-slim
 WORKDIR /app
-COPY server.py .
+COPY server.py rules.py .
+EXPOSE 8002
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 USER 10001:10001
 CMD ["python", "-u", "server.py"]

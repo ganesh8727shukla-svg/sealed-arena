@@ -1,0 +1,7 @@
+services:
+  bayora-model:
+    networks:
+      - bayora-model-egress
+
+networks:
+  bayora-model-egress: {}

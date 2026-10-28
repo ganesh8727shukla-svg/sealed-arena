@@ -1,0 +1,9 @@
+.env
+.env.*
+.git
+.git/**
+__pycache__
+**/__pycache__
+*.py[cod]
+tests
+**/.DS_Store

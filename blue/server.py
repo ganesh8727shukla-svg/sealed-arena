@@ -2,16 +2,27 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
+from urllib.parse import urlencode
 from threading import Thread
 import json
+import os
 import time
 
-BROKER_URL = "http://broker:8000/events"
-BROKER_READY_URL = "http://broker:8000/ready"
-BROKER_CLAIM_URL = "http://broker:8000/events/claim"
-BROKER_ANALYSIS_URL = "http://broker:8000/analysis"
-BROKER_FAILURE_URL = "http://broker:8000/events/fail"
-LLM_URL = "http://llm:8001/analyze"
+from rules import build_analysis, evaluate_detections, sanitize_for_llm
+
+def service_url(name, default):
+    value = os.environ.get(name, default).strip().rstrip("/")
+    return value if "://" in value else "http://" + value
+
+
+BROKER_BASE_URL = service_url("BROKER_URL", "http://broker:8000")
+BROKER_URL = BROKER_BASE_URL + "/events"
+BROKER_READY_URL = BROKER_BASE_URL + "/ready"
+BROKER_CLAIM_URL = BROKER_BASE_URL + "/events/claim"
+BROKER_ANALYSIS_URL = BROKER_BASE_URL + "/analysis"
+BROKER_FAILURE_URL = BROKER_BASE_URL + "/events/fail"
+LLM_URL = service_url("LLM_URL", "http://llm:8001") + "/analyze"
+BROKER_CONTEXT_URL = BROKER_BASE_URL + "/event-context"
 
 seen_ids = set()
 
@@ -34,9 +45,8 @@ class BlueHandler(BaseHTTPRequestHandler):
             self.wfile.write(body)
         elif self.path == "/ready":
             try:
-                for url in (BROKER_READY_URL, "http://llm:8001/ready"):
-                    with urlopen(url, timeout=2):
-                        pass
+                with urlopen(BROKER_READY_URL, timeout=2):
+                    pass
                 body = json.dumps({"service": "blue", "status": "healthy"}).encode()
                 status = 200
             except Exception as error:
@@ -60,9 +70,16 @@ class BlueHandler(BaseHTTPRequestHandler):
 
 
 def analyze_event(event):
+    event_id = event.get("id")
+    context_url = BROKER_CONTEXT_URL + "?" + urlencode({"event_id": str(event_id)})
+    with urlopen(context_url, timeout=5) as response:
+        context = json.loads(response.read().decode("utf-8"))
+    payload = dict(event.get("payload", {}))
+    payload["id"] = event_id
+    detections = evaluate_detections(payload, context.get("events", []))
     request_body = {
-        "event_id": event.get("id"),
-        "event": event.get("payload", {})
+        "event_id": event_id,
+        "event": sanitize_for_llm(event.get("payload", {})),
     }
 
     request = Request(
@@ -72,8 +89,24 @@ def analyze_event(event):
         method="POST"
     )
 
-    with urlopen(request, timeout=35) as response:
-        return json.loads(response.read().decode())
+    try:
+        with urlopen(request, timeout=35) as response:
+            model_result = json.loads(response.read().decode())
+        if not isinstance(model_result, dict):
+            raise ValueError("LLM returned a non-object response")
+        model_available = True
+    except (URLError, HTTPError, TimeoutError, ValueError, KeyError, TypeError) as error:
+        log_record("llm_advisory_unavailable", event_id=event_id, error_type=type(error).__name__)
+        model_result = {
+            "provider": "unavailable",
+            "model": "unavailable",
+            "severity": "unknown",
+            "explanation": "LLM advisory is unavailable; deterministic rule results remain active.",
+            "recommendation": "Review the event and any rule evidence manually.",
+            "confidence": None,
+        }
+        model_available = False
+    return build_analysis(detections, model_result, model_available)
 
 
 def monitor_broker():
@@ -89,6 +122,7 @@ def monitor_broker():
 
             event_id = event["id"]
             log_record("event_processing", event_id=event_id, attempt=event.get("attempts"))
+            processing_started = time.monotonic()
             try:
                 analysis = analyze_event(event)
                 post_json(BROKER_ANALYSIS_URL, {"event_id": event_id, "analysis": analysis})
@@ -98,6 +132,7 @@ def monitor_broker():
                     severity=analysis.get("severity", "unknown"),
                     provider=analysis.get("provider"),
                     model=analysis.get("model"),
+                    duration_ms=round((time.monotonic() - processing_started) * 1000),
                 )
             except (URLError, HTTPError, TimeoutError, ValueError, KeyError, TypeError) as error:
                 try:

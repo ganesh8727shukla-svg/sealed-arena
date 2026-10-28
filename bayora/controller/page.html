@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Bayora Lab | SealedArena</title>
+<style>
+:root{color-scheme:dark;--bg:#080d17;--panel:#111c2d;--panel2:#142238;--line:#2a3d59;--text:#edf4ff;--muted:#9aabc3;--cyan:#62d9ee;--green:#57d6a0;--amber:#f0c36a;--red:#ff7184}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#172c4b 0,transparent 45%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}main{width:min(1120px,calc(100% - 32px));margin:auto;padding:30px 0 56px}header,.row,.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px}header{margin-bottom:22px}h1{margin:0;font-size:clamp(30px,4vw,44px);letter-spacing:-.04em}h2{font-size:17px;margin:0}h3{font-size:14px;margin:0}.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.19em;text-transform:uppercase;font-weight:800;margin:0 0 5px}p{margin:7px 0}.muted,.subtle{color:var(--muted);font-size:12px}.panel,.card{border:1px solid var(--line);background:linear-gradient(145deg,var(--panel2),var(--panel));border-radius:14px;padding:16px;box-shadow:0 14px 34px #0002}.panel{margin:14px 0}.section-head{margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center}.controls input,.controls select{background:#0a1422;color:var(--text);border:1px solid var(--line);padding:10px;border-radius:9px;font:inherit}.controls input{min-width:230px;flex:1}.controls select{min-width:175px}button,.button{border:1px solid #3a5878;background:#19304b;color:var(--text);border-radius:9px;padding:9px 13px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}button:hover,.button:hover{border-color:var(--cyan)}button:disabled{opacity:.55;cursor:not-allowed}.danger{border-color:#824452;color:#ffdbe0}.banner{border-left:3px solid var(--amber);padding:9px 12px;color:#eed89f;background:#241f17;border-radius:6px;font-size:13px}.status{min-height:22px;color:var(--muted);font-size:13px}.health{display:flex;gap:8px;flex-wrap:wrap}.pill{border-radius:99px;padding:4px 9px;background:#12352f;color:var(--green);font-size:10px;text-transform:uppercase;font-weight:800}.pill.bad{background:#3b2029;color:var(--red)}.run-card{border:1px solid var(--line);border-radius:10px;background:#0a1422;padding:12px;margin:8px 0}.run-card.selected{border-color:var(--cyan)}.run-title{font-weight:750}.run-meta{color:var(--muted);font-size:12px;margin:3px 0 8px}.run-actions{display:flex;gap:7px;flex-wrap:wrap}.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.metric{background:#0a1422;border:1px solid var(--line);border-radius:9px;padding:10px}.metric strong{display:block;font-size:20px}.metric span{color:var(--muted);font-size:11px}.finding{border-left:3px solid var(--red);padding:8px 12px;margin:8px 0;background:#1d1520;border-radius:5px}.finding.ok{border-color:var(--green);background:#10211f}.result{border-top:1px solid var(--line);padding:11px 0}.result pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#09121f;border:1px solid var(--line);border-radius:8px;padding:9px;font:12px/1.45 ui-monospace,Menlo,monospace}.hidden{display:none!important}.role{font-size:12px;color:var(--cyan);font-weight:800;text-transform:uppercase}.footer{margin-top:24px;color:var(--muted);font-size:11px}a{color:var(--cyan)}
+.policy-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px}.policy-card{padding:11px;border:1px solid var(--line);background:#0a1422;border-radius:9px}.policy-card strong{display:block}.policy-card p{font-size:12px;color:var(--muted)}.policy-rules{color:var(--cyan)!important}.policy-form{display:grid;gap:10px}.policy-form>input,.policy-form>textarea{width:100%;background:#0a1422;color:var(--text);border:1px solid var(--line);padding:10px;border-radius:9px;font:inherit}.policy-form>textarea{min-height:66px;resize:vertical}.rule-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.rule-toggle{display:flex;gap:8px;align-items:flex-start;padding:9px;border:1px solid var(--line);border-radius:8px;background:#0a1422;font-size:12px}.rule-toggle input{accent-color:var(--cyan);margin-top:3px}.table-wrap{overflow:auto}.event-table{width:100%;border-collapse:collapse;font-size:12px}.event-table th,.event-table td{text-align:left;vertical-align:top;padding:8px;border-bottom:1px solid var(--line)}.event-table th{color:var(--cyan)}.status-valid{color:var(--green)}.status-compromised{color:var(--red)}.status-inconclusive{color:var(--amber)}.checkpoint{overflow-wrap:anywhere;background:#0a1422;border:1px solid var(--line);border-radius:8px;padding:10px;font:12px/1.5 ui-monospace,Menlo,monospace}
+.security-event{padding:10px;margin:7px 0;background:#0a1422;border:1px solid var(--line);border-radius:8px}.security-event strong{display:block}.security-event p{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+@media(max-width:600px){main{width:calc(100% - 22px);padding-top:18px}header{align-items:flex-start;flex-direction:column}.controls input{min-width:100%}}
+</style>
+</head>
+<body>
+<main>
+  <header><div><p class="eyebrow">SealedArena prototype add-on</p><h1>Bayora Lab</h1><p class="muted">Sealed adversarial AI safety evaluations with role-gated results</p></div><a class="button" href="http://localhost:8082/">Back to SealedArena</a></header>
+  <p class="banner">Local prototype only. Uses synthetic prompt tests with a mock target by default; a controlled endpoint can be configured. Role tokens demonstrate API access rules, not production identity or strong tenant isolation.</p>
+  <section class="panel">
+    <div class="section-head"><h2>Connect a demo role</h2><span id="role-label" class="role">Disconnected</span></div>
+    <div class="controls"><input id="role-token" type="password" autocomplete="off" placeholder="Paste the role token from .env"><button id="connect">Connect</button><button id="disconnect" class="danger hidden">Disconnect</button></div>
+    <p class="subtle">Find the role value in the project-root <code>.env</code> file. macOS hides dotfiles; in Finder press Cmd+Shift+. to show them. For a fresh checkout, copy <code>.env.example</code> to <code>.env</code>.</p>
+    <p id="connect-status" class="status" role="status">Tokens remain in this page's memory and are not saved in browser storage.</p>
+  </section>
+  <section class="panel">
+    <div class="section-head"><h2>Isolation health</h2><button id="refresh" disabled>Refresh</button></div>
+    <div id="health" class="health"><span class="muted">Connect to view service status.</span></div>
+    <p class="subtle">Red, Blue, and target-model workers have no host-published ports and do not share a worker network.</p>
+  </section>
+  <section id="security-overview" class="panel hidden">
+    <div class="section-head"><h2>Security posture &amp; evidence</h2><span id="model-mode" class="pill">Model status</span></div>
+    <div class="grid"><article class="metric"><strong>Active run</strong><span id="active-run-summary">None currently active</span></article><article class="metric"><strong>Latest evaluation integrity</strong><span id="latest-integrity">No released evaluation yet</span></article></div>
+    <h3 style="margin-top:16px">Isolation checks</h3><div id="overview-isolation" class="health"></div>
+    <div id="security-metrics" class="report-grid"></div>
+    <h3 style="margin-top:16px">Access policy map</h3><div id="access-policies" class="policy-list"></div>
+    <h3 style="margin-top:16px">Recent security events</h3><div id="recent-events"></div>
+    <h3 style="margin-top:16px">Independent witness checkpoint</h3>
+    <p class="subtle">A separate service stores the latest accepted audit-chain position. This local witness is on the same Docker host.</p>
+    <pre id="witness-checkpoint" class="checkpoint">Loading checkpoint…</pre>
+  </section>
+  <section id="create-panel" class="panel hidden">
+    <div class="section-head"><h2>Create an evaluation</h2><span class="subtle">Evaluator role only</span></div>
+    <div class="controls"><input id="run-name" maxlength="120" value="Synthetic prompt-boundary evaluation" aria-label="Evaluation name"><select id="test-pack-select" aria-label="Test suite"></select><select id="policy-select" aria-label="Blue policy"></select><button id="create-run">Create draft</button></div>
+    <p id="test-pack-description" class="subtle">Choose a synthetic suite. The full suite includes the protected Blue artifact challenge.</p>
+  </section>
+  <section id="policy-workbench" class="panel hidden">
+    <div class="section-head"><h2>Blue policy workbench</h2><span class="subtle">Blue role only · versions cannot be edited or deleted</span></div>
+    <p class="subtle">Create a defensive profile from the three controls supported by this synthetic model. Then disconnect and connect as evaluator to run it.</p>
+    <form id="policy-form" class="policy-form">
+      <input id="policy-title" maxlength="80" required placeholder="Policy name" aria-label="Policy name">
+      <textarea id="policy-description" maxlength="400" required placeholder="What should this policy defend against?" aria-label="Policy description"></textarea>
+      <div class="rule-grid">
+        <label class="rule-toggle"><input id="rule-direct" type="checkbox" checked><span>Block direct instruction overrides</span></label>
+        <label class="rule-toggle"><input id="rule-retrieval" type="checkbox" checked><span>Treat retrieved instructions as untrusted</span></label>
+        <label class="rule-toggle"><input id="rule-session" type="checkbox" checked><span>Isolate each run session</span></label>
+      </div>
+      <div class="controls"><button type="submit">Create immutable policy version</button><span id="policy-status" class="status" role="status"></span></div>
+    </form>
+    <h3>Available policy versions</h3>
+    <div id="policy-list" class="policy-list"><p class="muted">Connect as Blue to load policy versions.</p></div>
+  </section>
+  <section class="panel">
+    <div class="section-head"><h2>Evaluation runs</h2><span id="run-count" class="subtle"></span></div>
+    <div id="runs"><div class="muted">Connect with a role token to load runs.</div></div>
+  </section>
+  <section id="detail-panel" class="panel hidden">
+    <div class="section-head"><h2 id="detail-title">Selected run</h2><span id="detail-status" class="pill">Draft</span></div>
+    <p id="detail-message" class="status"></p>
+    <div id="detail-actions" class="controls"></div>
+    <div id="report"></div>
+  </section>
+  <section id="audit-panel" class="panel hidden">
+    <div class="section-head"><h2>Audit chain</h2><div class="controls"><button id="verify-audit">Verify chain &amp; witness</button><button id="tamper-audit">Run tamper-copy check</button><button id="load-events">Load audit events</button><button id="export-audit">Export audit JSON</button></div></div>
+    <p class="subtle">The tamper demonstration alters a temporary copy only. The independent witness records accepted checkpoints separately from the controller event database.</p>
+    <pre id="audit-result" class="subtle"></pre>
+    <div id="audit-events" class="table-wrap"></div>
+  </section>
+  <p class="footer">This prototype demonstrates API and network boundaries on one local Docker host. It does not claim protection from host administrators, kernel vulnerabilities, timing channels, or shared-model KV-cache leakage.</p>
+</main>
+<script>
+let credential = '';
+let currentRole = '';
+let selectedRunId = '';
+let refreshTimer = null;
+const $ = id => document.getElementById(id);
+
+async function api(path, options = {}, token = credential) {
+  const headers = {'Content-Type':'application/json', ...(options.headers || {})};
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const response = await fetch(path, {...options, headers, cache:'no-store'});
+  const data = await response.json().catch(() => ({}));
+  return {response, data};
+}
+function appendMessage(node, text) { node.textContent = text || ''; }
+function makeButton(label, onClick, className = '') {
+  const button = document.createElement('button');
+  button.type = 'button'; button.textContent = label; button.className = className;
+  button.addEventListener('click', onClick); return button;
+}
+function formatTime(value) {
+  if (!value) return 'not started';
+  const date = new Date(value); return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+async function connect() {
+  credential = $('role-token').value.trim();
+  if (!credential) { appendMessage($('connect-status'), 'Enter a role token from your local .env file.'); return; }
+  const {response, data} = await api('/api/me');
+  if (!response.ok) { currentRole = ''; appendMessage($('connect-status'), data.error || 'Connection denied.'); return; }
+  currentRole = data.role;
+  $('role-label').textContent = 'Connected: ' + currentRole;
+  $('connect').classList.add('hidden'); $('disconnect').classList.remove('hidden');
+  $('role-token').disabled = true; $('refresh').disabled = false;
+  $('create-panel').classList.toggle('hidden', currentRole !== 'evaluator');
+  $('policy-workbench').classList.toggle('hidden', currentRole !== 'blue');
+  $('audit-panel').classList.toggle('hidden', currentRole !== 'evaluator');
+  appendMessage($('connect-status'), 'Connected. Run visibility is role-gated by the controller.');
+  await loadPolicies(); await loadSuites(); await refresh();
+  clearInterval(refreshTimer); refreshTimer = setInterval(refresh, 2000);
+}
+async function disconnect() {
+  credential = ''; currentRole = ''; selectedRunId = ''; clearInterval(refreshTimer);
+  $('role-label').textContent = 'Disconnected'; $('role-token').value = ''; $('role-token').disabled = false;
+  $('connect').classList.remove('hidden'); $('disconnect').classList.add('hidden'); $('refresh').disabled = true;
+  $('create-panel').classList.add('hidden'); $('policy-workbench').classList.add('hidden'); $('audit-panel').classList.add('hidden'); $('detail-panel').classList.add('hidden');
+  $('security-overview').classList.add('hidden'); $('audit-events').replaceChildren();
+  $('health').replaceChildren(Object.assign(document.createElement('span'), {className:'muted', textContent:'Connect to view service status.'}));
+  $('runs').replaceChildren(Object.assign(document.createElement('div'), {className:'muted', textContent:'Connect with a role token to load runs.'}));
+}
+async function loadPolicies() {
+  if (!['blue','evaluator'].includes(currentRole)) return;
+  const {response,data} = await api('/api/policies');
+  if (!response.ok) return;
+  const select = $('policy-select'); select.replaceChildren();
+  const policies = data.policies || [];
+  for (const policy of policies) {
+    const option = new Option(policy.title + ' · v' + policy.version + ' — ' + policy.description, policy.policy_id); select.add(option);
+  }
+  if (currentRole === 'blue') {
+    const root = $('policy-list'); root.replaceChildren();
+    for (const policy of policies) {
+      const card = document.createElement('article'); card.className = 'policy-card';
+      const title = document.createElement('strong'); title.textContent = policy.title + ' · v' + policy.version;
+      const description = document.createElement('p'); description.textContent = policy.description;
+      const rules = document.createElement('p'); rules.className = 'policy-rules';
+      rules.textContent = Object.entries(policy.rules || {}).map(([key,enabled]) => key.replaceAll('_',' ') + ': ' + (enabled ? 'on' : 'off')).join(' · ');
+      card.append(title,description,rules); root.append(card);
+    }
+    if (!policies.length) root.append(Object.assign(document.createElement('p'), {className:'muted', textContent:'No policy versions yet.'}));
+  }
+}
+async function loadSuites() {
+  if (currentRole !== 'evaluator') return;
+  const {response,data} = await api('/api/catalog');
+  if (!response.ok) return;
+  const select = $('test-pack-select'); const previous = select.value; select.replaceChildren();
+  for (const pack of (data.test_packs || [])) {
+    const option = new Option(pack.title + ' · ' + pack.test_count + ' cases', pack.pack_id);
+    option.dataset.description = pack.description; select.add(option);
+  }
+  if ([...select.options].some(option => option.value === previous)) select.value = previous;
+  updateSuiteDescription();
+}
+function updateSuiteDescription() {
+  const select = $('test-pack-select');
+  const option = select.options[select.selectedIndex];
+  $('test-pack-description').textContent = option?.dataset.description || 'Choose a synthetic suite.';
+}
+async function createPolicy(event) {
+  event.preventDefault();
+  const rules = {
+    block_direct_override: $('rule-direct').checked,
+    treat_retrieved_text_as_untrusted: $('rule-retrieval').checked,
+    session_isolation: $('rule-session').checked,
+  };
+  const {response,data} = await api('/api/policies', {method:'POST', body:JSON.stringify({
+    title:$('policy-title').value, description:$('policy-description').value, rules,
+  })});
+  if (!response.ok) { appendMessage($('policy-status'), data.error || 'Could not create policy.'); return; }
+  appendMessage($('policy-status'), 'Created ' + data.policy.title + ' · v' + data.policy.version + '. This version is immutable.');
+  $('policy-form').reset();
+  $('rule-direct').checked = true; $('rule-retrieval').checked = true; $('rule-session').checked = true;
+  await loadPolicies();
+}
+async function createRun() {
+  const {response,data} = await api('/api/runs', {method:'POST', body:JSON.stringify({name:$('run-name').value, pack_id:$('test-pack-select').value, policy_profile:$('policy-select').value})});
+  if (!response.ok) { appendMessage($('connect-status'), data.error || 'Could not create run.'); return; }
+  selectedRunId = data.run_id; await refresh();
+}
+async function startRun(runId) {
+  const {response,data} = await api('/api/runs/' + encodeURIComponent(runId) + '/start', {method:'POST', body:'{}'});
+  if (!response.ok) appendMessage($('detail-message'), data.error || 'Could not start run.');
+  await refresh();
+}
+async function releaseRun(runId) {
+  const {response,data} = await api('/api/runs/' + encodeURIComponent(runId) + '/release', {method:'POST', body:'{}'});
+  if (!response.ok) appendMessage($('detail-message'), data.error || 'Could not release report.');
+  await refresh();
+}
+function renderReport(report) {
+  const root = $('report'); root.replaceChildren();
+  if (!report) return;
+  const metrics = document.createElement('div'); metrics.className = 'report-grid';
+  const attackRate = report.attack_success_rate == null ? '—' : Math.round(report.attack_success_rate * 100) + '%';
+  const passRate = report.pass_rate == null ? '—' : Math.round(report.pass_rate * 100) + '%';
+  const values = [
+    ['Policy', report.policy_title || report.policy_profile],
+    ['Environment validity', report.evaluation_validity || 'INCONCLUSIVE'],
+    ['Cases', report.test_count ?? '—'], ['Trials', report.measurement_conditions?.trials_for_this_run ?? '—'],
+    ['Canary exposures', report.canary_exposure_count ?? '—'],
+    ['Attack success rate', attackRate], ['Pass rate', passRate],
+    ['Protected artifact blocked', (report.access_control_block_count ?? '—') + ' / ' + (report.access_control_test_count ?? '—')],
+    ['Mean target latency', report.mean_latency_ms == null ? '—' : report.mean_latency_ms + ' ms'],
+    ['P95 target latency', report.p95_latency_ms == null ? '—' : report.p95_latency_ms + ' ms'],
+  ];
+  for (const [label,value] of values) {
+    const tile = document.createElement('div'); tile.className = 'metric';
+    const number = document.createElement('strong'); number.textContent = String(value);
+    const caption = document.createElement('span'); caption.textContent = label; tile.append(number,caption); metrics.append(tile);
+  }
+  root.append(metrics);
+  const validity = document.createElement('div'); validity.className = 'finding ' + (report.evaluation_validity === 'VALID' ? 'ok' : '');
+  const validityClass = report.evaluation_validity === 'COMPROMISED' ? 'status-compromised' : report.evaluation_validity === 'VALID' ? 'status-valid' : 'status-inconclusive';
+  const verdict = document.createElement('strong'); verdict.className = validityClass;
+  verdict.textContent = 'Evaluation integrity: ' + (report.evaluation_validity || 'INCONCLUSIVE'); validity.append(verdict);
+  const reasons = report.environment_integrity?.reasons || [];
+  if (reasons.length) { const reason = document.createElement('p'); reason.textContent = reasons.join(' '); validity.append(reason); }
+  root.append(validity);
+  const split = document.createElement('div'); split.className = 'grid';
+  const model = document.createElement('article'); model.className = 'metric';
+  const modelTitle = document.createElement('strong'); modelTitle.textContent = 'Model safety: ' + (report.model_safety?.result || 'UNAVAILABLE');
+  const modelNote = document.createElement('span'); modelNote.textContent = (report.measurement_conditions?.model_provider || 'not run') + ' · ' + (report.model_safety?.note || 'Synthetic suite evidence only.');
+  model.append(modelTitle, modelNote);
+  const environment = document.createElement('article'); environment.className = 'metric';
+  const envTitle = document.createElement('strong'); envTitle.textContent = 'Environment integrity: ' + (report.environment_integrity?.status || 'INCONCLUSIVE');
+  const envNote = document.createElement('span'); envNote.textContent = 'Audit chain ' + (report.environment_integrity?.audit_chain_verified ? 'verified' : 'not verified') + ' · run data ' + (report.run_data_integrity_verified ? 'verified' : 'not verified');
+  environment.append(envTitle, envNote); split.append(model, environment); root.append(split);
+  const affected = document.createElement('p'); affected.className = 'subtle';
+  affected.textContent = 'Affected tests: ' + ((report.environment_integrity?.affected_tests || []).join(', ') || 'none recorded'); root.append(affected);
+  const note = document.createElement('p'); note.className = 'subtle'; note.textContent = report.prototype_note || ''; root.append(note);
+  const integrity = document.createElement('div'); integrity.className = 'finding ' + (report.integrity_verified && report.run_data_integrity_verified ? 'ok' : '');
+  integrity.textContent = 'Audit verification: ' + (report.integrity_verified ? 'report hash matches the audit record' : 'report hash could not be verified') + ' · sealed data: ' + (report.run_data_integrity_verified ? 'matches the run seal' : 'not verified');
+  root.append(integrity);
+  for (const finding of (report.findings || [])) {
+    const row = document.createElement('div'); row.className = 'finding';
+    row.textContent = finding.severity + ' · ' + finding.finding_id + ' · ' + finding.summary + ' · test ' + finding.test_id;
+    root.append(row);
+  }
+  if (!(report.findings || []).length) {
+    const row = document.createElement('div'); row.className = 'finding ' + (report.run_data_integrity_verified && report.canary_exposure_count === 0 ? 'ok' : '');
+    row.textContent = report.model_safety?.result === 'NOT_RUN'
+      ? 'No model tests were included in the selected suite.'
+      : report.run_data_integrity_verified && report.canary_exposure_count === 0
+        ? 'No synthetic canary exposure was observed in this run.'
+        : 'Model-safety result is unavailable; no pass claim is made.';
+    root.append(row);
+  }
+  const evidence = document.createElement('p'); evidence.className = 'subtle';
+  evidence.textContent = 'Evidence references: ' + ((report.environment_integrity?.evidence_refs || []).map(item => item.type + (item.sequence ? ' #' + item.sequence : '')).join(' · ') || 'none'); root.append(evidence);
+  const canary = document.createElement('p'); canary.className = 'subtle'; canary.textContent = 'Synthetic canary digest: ' + (report.canary_hash || 'unavailable'); root.append(canary);
+  const resultsTitle = document.createElement('h3'); resultsTitle.textContent = 'Released test evidence'; root.append(resultsTitle);
+  for (const result of (report.results || [])) {
+    const item = document.createElement('article'); item.className = 'result';
+    const heading = document.createElement('strong'); heading.textContent = result.title + (result.canary_exposed ? ' · CANARY EXPOSED' : ' · no canary exposure');
+    const prompt = document.createElement('pre'); prompt.textContent = 'Prompt: ' + result.prompt;
+    const response = document.createElement('pre'); response.textContent = 'Model response: ' + result.response;
+    const refs = document.createElement('p'); refs.className = 'subtle'; refs.textContent = 'Prompt SHA-256: ' + result.prompt_hash + ' · Response SHA-256: ' + result.response_hash + ' · ' + result.latency_ms + ' ms';
+    item.append(heading,prompt,response,refs); root.append(item);
+  }
+}
+async function selectRun(runId) { selectedRunId = runId; await renderSelectedRun(); }
+async function renderSelectedRun() {
+  const root = $('detail-panel');
+  if (!selectedRunId || !currentRole) { root.classList.add('hidden'); return; }
+  const {response,data} = await api('/api/runs/' + encodeURIComponent(selectedRunId));
+  if (!response.ok) { root.classList.add('hidden'); return; }
+  root.classList.remove('hidden'); $('detail-title').textContent = data.name + ' · ' + data.run_id.slice(0,8);
+  $('detail-status').textContent = data.status; $('detail-status').classList.toggle('bad', ['failed'].includes(data.status));
+  const actions = $('detail-actions'); actions.replaceChildren();
+  const report = $('report'); report.replaceChildren();
+  if (data.status === 'running') appendMessage($('detail-message'), 'Run is processing ' + data.completed_tests + ' of ' + (data.test_count || 5) + ' cases. Prompts and responses remain sealed.');
+  else if (data.status === 'sealed') appendMessage($('detail-message'), 'All model calls are complete. Raw prompts and responses remain sealed until the evaluator releases the report.');
+  else if (data.status === 'draft') appendMessage($('detail-message'), 'Draft ready. Start the evaluation when the services are healthy.');
+  else if (data.status === 'failed') appendMessage($('detail-message'), 'Run failed: ' + (data.error_code || 'unknown error') + '.');
+  else appendMessage($('detail-message'), 'Report released at ' + formatTime(data.completed_at) + '.');
+  if (currentRole === 'evaluator' && data.status === 'draft') actions.append(makeButton('Start sealed run', () => startRun(selectedRunId)));
+  if (currentRole === 'evaluator' && data.status === 'sealed') {
+    actions.append(makeButton('Release final report', () => releaseRun(selectedRunId)));
+    actions.append(makeButton('Inject simulated critical failure', async () => {
+      const result = await api('/api/runs/' + encodeURIComponent(selectedRunId) + '/inject-failure', {method:'POST', body:'{}'});
+      appendMessage($('detail-message'), result.response.ok ? 'Critical failure recorded. Releasing this run will mark the evaluation COMPROMISED.' : (result.data.error || 'Could not record the demo failure.'));
+      await refresh();
+    }, 'danger'));
+  }
+  if (currentRole === 'red') actions.append(makeButton('Attempt Blue private-file access', async () => {
+    const result = await api('/api/security/access-attempt', {method:'POST', body:JSON.stringify({run_id:selectedRunId})});
+    const attempt = result.data.attempt;
+    appendMessage($('detail-message'), result.response.ok
+      ? (attempt.artifact_accessed ? 'Boundary failure: the private Blue file was read and the evaluation will be marked compromised.' : 'Denied as expected. Blue’s actual private file read counter did not change; the attempt is audited.')
+      : (result.data.error || 'Could not check artifact boundary.'));
+    await refresh();
+  }));
+  if (currentRole === 'red') actions.append(makeButton('Probe Blue policy boundary', async () => {
+    const result = await api('/api/policies');
+    appendMessage($('detail-message'), result.response.status === 403 ? 'Blocked as expected: Red cannot read Blue policy configuration (403). This attempt is audited.' : 'Unexpected policy access response: ' + result.response.status);
+  }));
+  if (currentRole === 'blue' && data.status !== 'complete') actions.append(makeButton('Probe sealed artifact boundary', async () => {
+    const result = await api('/api/runs/' + encodeURIComponent(selectedRunId) + '/artifacts');
+    appendMessage($('detail-message'), result.response.status === 423 ? 'Blocked as expected: artifacts remain sealed before report release (423). This attempt is audited.' : 'Unexpected artifact access response: ' + result.response.status);
+  }));
+  if (data.status === 'complete') {
+    const result = await api('/api/runs/' + encodeURIComponent(selectedRunId) + '/report');
+    if (result.response.ok) renderReport(result.data);
+    else appendMessage($('detail-message'), result.data.error || 'Report could not be loaded.');
+  }
+}
+async function refresh() {
+  if (!credential) return;
+  const health = await fetch('/ready', {cache:'no-store'}).then(r => r.json()).catch(() => ({status:'unavailable',dependencies:{}}));
+  const healthNode = $('health'); healthNode.replaceChildren();
+  for (const [name,ok] of Object.entries(health.dependencies || {})) {
+    const pill = document.createElement('span'); pill.className = 'pill' + (ok ? '' : ' bad'); pill.textContent = name + ': ' + (ok ? 'healthy' : 'unavailable'); healthNode.append(pill);
+  }
+  $('security-overview').classList.remove('hidden');
+  const overviewResult = await api('/api/security/overview');
+  if (overviewResult.response.ok) renderSecurityOverview(overviewResult.data, health.dependencies || {});
+  const {response,data} = await api('/api/runs');
+  if (!response.ok) { appendMessage($('connect-status'), data.error || 'Run list failed.'); return; }
+  const runs = data.runs || []; $('run-count').textContent = runs.length + ' run(s)';
+  const list = $('runs'); list.replaceChildren();
+  if (!runs.length) { const empty = document.createElement('p'); empty.className='muted'; empty.textContent='No evaluation runs yet.'; list.append(empty); }
+  for (const run of runs) {
+    const card = document.createElement('article'); card.className='run-card' + (run.run_id === selectedRunId ? ' selected':'');
+    const title = document.createElement('div'); title.className='run-title'; title.textContent=run.name;
+    const integrity = run.evaluation_integrity && run.evaluation_integrity !== 'pending' ? ' · integrity ' + run.evaluation_integrity : '';
+    const meta = document.createElement('p'); meta.className='run-meta'; meta.textContent=run.run_id + ' · ' + (run.pack_id || 'suite').replaceAll('_',' ') + ' · ' + run.status + integrity + ' · ' + (run.status === 'running' ? run.completed_tests + '/' + (run.test_count || 5) + ' cases' : 'created ' + formatTime(run.created_at));
+    const actions = document.createElement('div'); actions.className='run-actions'; actions.append(makeButton('Open run', () => selectRun(run.run_id)));
+    card.append(title,meta,actions); list.append(card);
+  }
+  if (selectedRunId && runs.some(item => item.run_id === selectedRunId)) await renderSelectedRun();
+  else if (!selectedRunId && runs.length) await selectRun(runs[0].run_id);
+}
+async function verifyAudit() {
+  const {response,data} = await api('/api/audit/verify');
+  appendMessage($('audit-result'), response.ok ? JSON.stringify(data,null,2) : (data.error || 'Verification failed'));
+}
+function renderSecurityOverview(data, dependencies = {}) {
+  const labels = [
+    ['Protected-file attempts', data.metrics?.protected_artifact_attempts],
+    ['Access denials', data.metrics?.access_denials],
+    ['Tamper detections', (data.metrics?.tamper_detections ?? 0) + ' / ' + (data.metrics?.tamper_checks ?? 0)],
+    ['Invalidated evaluations', data.metrics?.invalidated_evaluations],
+    ['Inconclusive runs', data.metrics?.inconclusive_evaluations],
+    ['Correct invalidation', data.metrics?.invalidation_correctness_rate == null ? '—' : Math.round(data.metrics.invalidation_correctness_rate * 100) + '%'],
+    ['False denials', data.metrics?.false_denials],
+    ['Mean policy overhead', data.metrics?.mean_policy_overhead_ms == null ? '—' : data.metrics.mean_policy_overhead_ms + ' ms'],
+    ['Completed trials', data.metrics?.completed_runs],
+    ['Repeat comparisons', data.metrics?.reproducibility_comparisons],
+    ['Repeat consistency', data.metrics?.reproducibility_consistency_rate == null ? 'Need repeat runs' : Math.round(data.metrics.reproducibility_consistency_rate * 100) + '%'],
+  ];
+  const metrics = $('security-metrics'); metrics.replaceChildren();
+  for (const [label,value] of labels) {
+    const tile = document.createElement('div'); tile.className = 'metric';
+    const amount = document.createElement('strong'); amount.textContent = value == null ? '0' : String(value);
+    const caption = document.createElement('span'); caption.textContent = label; tile.append(amount,caption); metrics.append(tile);
+  }
+  const model = data.model || {};
+  const pill = $('model-mode'); pill.textContent = 'Target: ' + (model.mode || 'unavailable') + (model.model ? ' · ' + model.model : '');
+  pill.classList.toggle('bad', model.status !== 'healthy');
+  const active = data.active_run;
+  $('active-run-summary').textContent = active
+    ? active.run_id + ' · ' + active.status + ' · integrity ' + (active.evaluation_integrity || 'pending')
+    : 'No run currently running or sealed.';
+  const latest = data.latest_evaluation;
+  const latestNode = $('latest-integrity');
+  latestNode.textContent = latest
+    ? latest.evaluation_integrity + ' · ' + latest.status + ' · ' + latest.run_id
+    : 'No completed evaluation yet.';
+  latestNode.className = latest?.evaluation_integrity === 'COMPROMISED' ? 'status-compromised'
+    : latest?.evaluation_integrity === 'VALID' ? 'status-valid'
+      : latest?.evaluation_integrity === 'INCONCLUSIVE' ? 'status-inconclusive' : '';
+  const isolation = $('overview-isolation'); isolation.replaceChildren();
+  for (const [name,ok] of Object.entries(dependencies)) {
+    const state = document.createElement('span'); state.className = 'pill' + (ok ? '' : ' bad');
+    state.textContent = name + ': ' + (ok ? 'healthy' : 'unavailable'); isolation.append(state);
+  }
+  const witness = data.witness || {};
+  $('witness-checkpoint').textContent = JSON.stringify({
+    status: witness.verified ? 'verified' : (witness.error || 'unavailable'),
+    sequence: witness.sequence ?? witness.checkpoint?.sequence ?? null,
+    root_hash: witness.root_hash ?? witness.checkpoint?.root_hash ?? null,
+    updated_at: witness.updated_at ?? witness.checkpoint?.updated_at ?? null,
+  }, null, 2);
+  const policyRoot = $('access-policies'); policyRoot.replaceChildren();
+  for (const policy of (data.access_policies || [])) {
+    const card = document.createElement('article'); card.className = 'policy-card';
+    const title = document.createElement('strong'); title.textContent = policy.source + ' → ' + policy.target + ' · ' + policy.decision.toUpperCase();
+    const rule = document.createElement('p'); rule.textContent = policy.rule_id;
+    const reason = document.createElement('p'); reason.textContent = policy.reason;
+    card.append(title,rule,reason); policyRoot.append(card);
+  }
+  const eventsRoot = $('recent-events'); eventsRoot.replaceChildren();
+  const recent = data.recent_security_events;
+  if (!recent) {
+    eventsRoot.append(Object.assign(document.createElement('p'), {className:'muted', textContent:'Recent event details are available to the evaluator role.'}));
+  } else if (!recent.length) {
+    eventsRoot.append(Object.assign(document.createElement('p'), {className:'muted', textContent:'No recorded security events yet.'}));
+  } else {
+    for (const event of recent) {
+      const card = document.createElement('article'); card.className = 'security-event';
+      const title = document.createElement('strong'); title.textContent = '#' + event.sequence + ' · ' + (event.actor || 'system') + ' · ' + event.action;
+      const when = document.createElement('p'); when.textContent = formatTime(event.occurred_at) + ' · run ' + (event.run_id || 'system');
+      const facts = document.createElement('p');
+      const d = event.details || {};
+      facts.textContent = [d.resource || d.target, d.decision ? 'decision ' + d.decision : '', d.reason || ''].filter(Boolean).join(' · ') || 'No additional decision details.';
+      card.append(title,when,facts); eventsRoot.append(card);
+    }
+  }
+}
+async function loadAuditEvents() {
+  const {response,data} = await api('/api/audit/events');
+  if (!response.ok) { appendMessage($('audit-result'), data.error || 'Could not load audit events.'); return; }
+  appendMessage($('audit-result'), 'Chain ' + (data.verification.verified ? 'verified' : 'failed') + ' · witness ' + (data.witness.verified ? 'verified' : (data.witness.error || 'unavailable')) + ' · showing up to 100 events.');
+  const root = $('audit-events'); root.replaceChildren();
+  const table = document.createElement('table'); table.className = 'event-table';
+  const head = document.createElement('thead'); const row = document.createElement('tr');
+  for (const label of ['Seq','Time','Run','Actor','Action','Decision','Reason','Verification']) { const th=document.createElement('th'); th.textContent=label; row.append(th); }
+  head.append(row); table.append(head); const body = document.createElement('tbody');
+  for (const event of [...(data.entries || [])].reverse()) {
+    const details = event.body?.details || {};
+    const failedAt = data.verification?.failed_sequence;
+    const recordVerified = data.verification?.verified || (failedAt && event.sequence < failedAt);
+    const tr=document.createElement('tr'); const values=[event.sequence,formatTime(event.body?.occurred_at),event.body?.run_id || '—',event.body?.actor || '—',event.body?.action || '—',details.decision || '—',details.reason || '—',recordVerified ? 'VERIFIED' : 'FAILED / UNVERIFIED'];
+    for (const value of values) { const td=document.createElement('td'); td.textContent=String(value); tr.append(td); }
+    body.append(tr);
+  }
+  table.append(body); root.append(table);
+}
+async function tamperDemo() {
+  const {response,data} = await api('/api/audit/tamper-demo', {method:'POST', body:'{}'});
+  appendMessage($('audit-result'), response.ok
+    ? 'Altered copy verification: ' + (data.tamper_detected ? 'FAILED as expected (' + data.altered_copy_error + ' at event #' + data.altered_sequence + ')' : 'unexpectedly passed') + ' · persisted chain unchanged: ' + data.original_chain_unchanged
+    : (data.error || 'Tamper-copy check failed.'));
+  await refresh(); await loadAuditEvents();
+}
+async function exportAudit() {
+  const {response,data} = await api('/api/audit/export');
+  if (!response.ok) { appendMessage($('audit-result'), data.error || 'Export failed'); return; }
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download='bayora-audit-export.json'; link.click(); URL.revokeObjectURL(link.href);
+  appendMessage($('audit-result'), 'Audit JSON exported. Verification: ' + (data.verification.verified ? 'valid' : 'failed') + ' · root ' + (data.verification.root_hash || 'unavailable'));
+}
+$('connect').addEventListener('click', connect); $('disconnect').addEventListener('click', disconnect);
+$('refresh').addEventListener('click', refresh); $('create-run').addEventListener('click', createRun);
+$('test-pack-select').addEventListener('change', updateSuiteDescription);
+$('policy-form').addEventListener('submit', createPolicy);
+$('verify-audit').addEventListener('click', verifyAudit); $('export-audit').addEventListener('click', exportAudit);
+$('tamper-audit').addEventListener('click', tamperDemo); $('load-events').addEventListener('click', loadAuditEvents);
+</script>
+</body>
+</html>
