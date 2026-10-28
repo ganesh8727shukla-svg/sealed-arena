@@ -739,9 +739,9 @@ class DashboardAddonHandler(BaseHTTPRequestHandler):
             return
         if path == "/":
             page = PAGE.replace(
-                'href="http://localhost:8083/"',
-                'href="' + html.escape(BAYORA_PUBLIC_URL, quote=True) + '/"',
-            ).encode("utf-8")
+                b'href="http://localhost:8083/"',
+                ('href="' + html.escape(BAYORA_PUBLIC_URL, quote=True) + '/"').encode("utf-8"),
+            )
             self.send_body(200, "text/html; charset=utf-8", page)
         elif path == "/health":
             self.send_json(200, {"service": "dashboard-addon", "status": "healthy"})
